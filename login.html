@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <link href="css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" type="text/css" href="styles/login.css">
+</head>
+
+<body>
+    <div class="container">
+
+        <form class="form-signin" onsubmit="login()">
+            <h2 class="form-signin-heading">Academico</h2>
+
+            <!-- <label for="email" class="sr-only">E-mail</label> -->
+            <input type="text" id="email" class="form-control" placeholder="e-mail" required="" autofocus="">
+            <!-- <label for="password" class="sr-only">Senha</label> -->
+            <input type="password" id="password" class="form-control" placeholder="Senha" required="">
+
+            <div class="checkbox">
+                <label>
+                        <input type="checkbox" value="remember-me">Lembre de mim
+                    </label>
+            </div>
+
+            <button class="btn btn-lg btn-primary btn-block" type="submit">Entrar</button>
+        </form>
+
+    </div>
+    <script>
+        (() => {
+            if (sessionStorage.getItem('token') != null) {
+                window.location.href = 'Main.html';
+            }
+        })()
+
+        var login = function() {
+            event.preventDefault();
+
+            var nome = document.getElementById('email').value;
+            var password = document.getElementById('password').value;
+
+            var xhr = new XMLHttpRequest();
+            xhr.open('POST', 'http://localhost:50885/token', true);
+
+            xhr.onload = function() {
+                var resultado = JSON.parse(this.responseText);
+
+                if (resultado.error != 'invalid_grant') {
+                    sessionStorage.setItem('token', `${resultado.token_type} ${resultado.access_token}`);
+                    sessionStorage.setItem('username', `${resultado.Username}`);
+                    verificar();
+                } else {
+                    alert(resultado.error_description);
+                    nome = '';
+                    password = '';
+                }
+            }
+
+            xhr.setRequestHeader('content-type', 'application/x-www-form-urlencoded');
+            xhr.send(`grant_type=password&username=${nome}&password=${password}`);
+        }
+
+        var verificar = function() {
+            var xhr = new XMLHttpRequest();
+
+            xhr.open(`GET`, `http://localhost:50885/api/Aluno/Recuperar`, true);
+
+            xhr.setRequestHeader('Authorization', sessionStorage.getItem('token'));
+
+            xhr.onerror = function() {
+                console.error('ERRO', xhr.readyState);
+            }
+
+            xhr.onreadystatechange = function() {
+                var result = this.responseText;
+                window.location.href = 'Main.html';
+            };
+
+            xhr.send();
+        }
+    </script>
+</body>
+
+</html>
